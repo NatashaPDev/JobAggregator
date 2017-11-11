@@ -1,65 +1,82 @@
 package com.natashapetrenko.jobaggregator;
 
-import android.content.Context;
+import android.database.Cursor;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.List;
+import com.natashapetrenko.jobaggregator.data.JobsContracts;
+import com.natashapetrenko.jobaggregator.data.Status;
 
-/**
- * Created by natashapetrenko on 14/07/2016.
- */
+public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedViewHolder> {
+    private Cursor cursor;
+    private final OnItemClickListener clickListener;
 
-public class FeedAdapter<T extends FeedEntry> extends ArrayAdapter {
-    private static final String TAG = "FeedAdapter";
-    private final int layoutResource;
-    private final LayoutInflater layoutInflater;
-    private List<T> applications;
 
-    public FeedAdapter(Context context, int resource, List<T> applications) {
-        super(context, resource);
-        this.layoutResource = resource;
-        this.layoutInflater = LayoutInflater.from(context);
-        this.applications = applications;
+    public FeedAdapter(OnItemClickListener clickListener) {
+        super();
+        this.clickListener = clickListener;
     }
 
     @Override
-    public int getCount() {
-        return applications.size();
+    public FeedViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_record, parent, false);
+        return new FeedViewHolder(view);
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder viewHolder;
-        if (convertView == null) {
-            convertView = layoutInflater.inflate(layoutResource, parent, false);
-            viewHolder = new ViewHolder(convertView);
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
+    public void onBindViewHolder(FeedViewHolder holder, int position) {
+        int id;
+        if (cursor.moveToPosition(position)) {
+            id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(JobsContracts.JobsEntry._ID)));
+            holder.itemView.setTag(id);
+            holder.tvTitle.setText(cursor.getString(cursor.getColumnIndex(JobsContracts.JobsEntry.COLUMN_TITLE)));
+            holder.tvLink.setText(cursor.getString(cursor.getColumnIndex(JobsContracts.JobsEntry.COLUMN_LINK)));
+            holder.tvDescription.setText(cursor.getString(cursor.getColumnIndex(JobsContracts.JobsEntry.COLUMN_DESCRIPTION)));
+
+            if (cursor.getString(cursor.getColumnIndex(JobsContracts.JobsEntry.COLUMN_STATUS)).equals(Status.FAVORITE.toString())) {
+                holder.imgFavorite.setImageResource(android.R.drawable.star_on);
+            } else {
+                holder.imgFavorite.setImageResource(android.R.drawable.star_off);
+            }
         }
-
-        FeedEntry currentApp = applications.get(position);
-
-        viewHolder.tvTitle.setText(currentApp.getTitle());
-        viewHolder.tvLink.setText(currentApp.getLink());
-        viewHolder.tvDescription.setText(currentApp.getDescription());
-
-        return convertView;
     }
 
-    private class ViewHolder {
+    @Override
+    public int getItemCount() {
+        return cursor == null ? 0 : cursor.getCount();
+    }
+
+    public interface OnItemClickListener {
+        void OnItemClick(int id, View view);
+    }
+
+    public void setCursor(Cursor cursor) {
+        this.cursor = cursor;
+        notifyDataSetChanged();
+    }
+
+    public class FeedViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final TextView tvTitle;
         final TextView tvLink;
         final TextView tvDescription;
+        final ImageView imgFavorite;
 
-        public ViewHolder(View h) {
-            this.tvTitle = (TextView) h.findViewById(R.id.tvTitle);
-            this.tvLink = (TextView) h.findViewById(R.id.tvLink);
-            this.tvDescription = (TextView) h.findViewById(R.id.tvDescription);
+        public FeedViewHolder(View h) {
+            super(h);
+            this.tvTitle = h.findViewById(R.id.tvTitle);
+            this.tvLink = h.findViewById(R.id.tvLink);
+            this.tvDescription = h.findViewById(R.id.tvDescription);
+            this.imgFavorite = h.findViewById(R.id.imgFavorite);
+            this.imgFavorite.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            clickListener.OnItemClick((int) itemView.getTag(), view);
         }
     }
 }

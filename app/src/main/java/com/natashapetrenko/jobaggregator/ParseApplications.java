@@ -8,23 +8,19 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.StringReader;
 import java.util.ArrayList;
 
-/**
- * Created by natashapetrenko on 12/07/2016.
- */
-
-public class ParseApplications {
+class ParseApplications {
     private static final String TAG = "ParseApplications";
-    private ArrayList<FeedEntry> applications;
+    private ArrayList<FeedEntry> jobs;
 
     public ParseApplications() {
-        this.applications = new ArrayList<>();
+        this.jobs = new ArrayList<>();
     }
 
-    public ArrayList<FeedEntry> getApplications() {
-        return applications;
+    public ArrayList<FeedEntry> getJobs() {
+        return jobs;
     }
 
-    public boolean parse(String xmlData) {
+    public void parse(String xmlData) {
         boolean status = true;
         FeedEntry currentRecord = null;
         boolean inEntry = false;
@@ -55,12 +51,17 @@ public class ParseApplications {
 
                         if(inEntry) {
                             if("item".equalsIgnoreCase(tagName)) {
-                                applications.add(currentRecord);
+                                jobs.add(currentRecord);
                                 inEntry = false;
                             } else if("title".equalsIgnoreCase(tagName)) {
                                 currentRecord.setTitle(textValue);
                             } else if("link".equalsIgnoreCase(tagName)) {
                                 currentRecord.setLink(textValue);
+                                int index = 0;
+                                do {
+                                    index = textValue.indexOf('/', index + 1);
+                                } while (textValue.indexOf('/', index + 1) > 0);
+                                currentRecord.setId(Integer.parseInt(textValue.substring(index + 1)));
                             } else if("description".equalsIgnoreCase(tagName)) {
                                 textValue = textValue.replaceAll("<p>", "");
                                 textValue = textValue.replaceAll("</p>", "\n");
@@ -75,17 +76,15 @@ public class ParseApplications {
                 eventType = xpp.next();
 
             }
-            for (FeedEntry app: applications) {
+            for (FeedEntry app : jobs) {
                 Log.d(TAG, "******************");
                 Log.d(TAG, app.toString());
             }
 
         } catch(Exception e) {
-            status = false;
             e.printStackTrace();
         }
 
-        return status;
     }
 }
 

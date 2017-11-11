@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Job Aggregator</string>
+    <string name="jobs_count">Vacancies: %s</string>
+    <string name="content_description_add_to_favorite">Add to favorite</string>
+    <string name="action_show_hidden">Show hidden</string>
 </resources>
